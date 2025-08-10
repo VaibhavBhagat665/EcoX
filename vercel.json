@@ -1,26 +1,25 @@
 {
+  "version": 2,
   "buildCommand": "npm run build",
-  "outputDirectory": "dist/client",
   "installCommand": "npm install --legacy-peer-deps",
-  "functions": {
-    "api/index.js": {
-      "runtime": "nodejs18.x"
-    }
-  },
-  "rewrites": [
+  "builds": [
     {
-      "source": "/api/(.*)",
-      "destination": "/api"
+      "src": "server/index.ts",
+      "use": "@vercel/node",
+      "config": {
+        "includeFiles": ["server/**", "dist/client/**"]
+      }
     }
   ],
-  "routes": [
+  "rewrites": [
     {
-      "src": "/api/(.*)",
-      "dest": "/api"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/index.html"
+      "source": "/(.*)",
+      "destination": "/server/index.ts"
     }
-  ]
+  ],
+  "functions": {
+    "server/index.ts": {
+      "runtime": "nodejs18.x"
+    }
+  }
 }

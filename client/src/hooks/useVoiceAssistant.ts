@@ -25,7 +25,7 @@ interface VoiceAssistantState {
 }
 
 // Gemini API integration for voice commands
-const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY || 'AIzaSyAizfCEkA-KqT4BUC1YLzpUsbpGffpyWkw';
+const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
 const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${GEMINI_API_KEY}`;
 
 // Process voice command with AI

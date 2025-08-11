@@ -96,10 +96,10 @@ export const HeroSection: React.FC = () => {
       <div className="relative z-20 text-center max-w-7xl mx-auto px-6 pt-0 pb-20">
         <div className="slide-up">
           {/* Status Badge - no extra margin needed now */}
-          <div className="inline-flex items-center space-x-3 glass-pro rounded-full px-8 py-4 mb-12 border border-green-400/30 backdrop-blur-md">
-            <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
+          <div className="inline-flex px-8 py-4 mb-12">
+            {/* <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
             <span className="text-sm font-semibold text-gray-300 uppercase tracking-wide">Environmental Intelligence Platform</span>
-            <div className="px-3 py-1 bg-green-400/20 text-green-400 text-xs font-bold rounded-full">LIVE</div>
+            <div className="px-3 py-1 bg-green-400/20 text-green-400 text-xs font-bold rounded-full">LIVE</div> */}
           </div>
 
           {/* Main Title */}
@@ -148,7 +148,7 @@ export const HeroSection: React.FC = () => {
             
             <button
               onClick={handleWatchDemo}
-              className="btn-secondary text-lg px-10 py-5 font-semibold backdrop-blur-sm"
+              className="btn-secondary text-lg px-10 py-5 font-semibold backdrop-blur-md"
             >
               <span className="flex items-center">
                 <svg className="w-6 h-6 mr-3 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -189,7 +189,7 @@ export const HeroSection: React.FC = () => {
             ].map((stat, index) => (
               <div 
                 key={stat.label}
-                className="interactive-card group backdrop-blur-sm"
+                className="interactive-card group backdrop-blur-md"
                 style={{animationDelay: `${index * 0.2}s`}}
               >
                 {/* Icon */}

@@ -1,173 +1,153 @@
-import { randomUUID } from "crypto";
 import { 
   type User, 
-  type InsertUser,
-  type EnvironmentalMetrics,
-  type InsertEnvironmentalMetrics,
-  type AiRecommendation,
-  type InsertAiRecommendation,
-  type ChatMessage,
-  type InsertChatMessage,
-  type Challenge,
-  type InsertChallenge,
-  type ChallengeParticipation,
-  type InsertChallengeParticipation,
-  type LeaderboardEntry,
-  type SocialPost,
-  type InsertSocialPost
+  type InsertUser, 
+  type GreenAction, 
+  type InsertGreenAction,
+  type EcoTokenTransaction,
+  type InsertEcoTokenTransaction,
+  type AdminUser,
+  type InsertAdminUser
 } from "@shared/schema";
+import { randomUUID } from "crypto";
 
-// Storage interface for EcoX application
 export interface IStorage {
   // User operations
   getUser(id: string): Promise<User | undefined>;
-  getUserByEmail(email: string): Promise<User | undefined>;
-  getUserByFirebaseUID(firebaseUID: string): Promise<User | undefined>;
+  getUserByFirebaseUid(firebaseUid: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
-  updateUser(id: string, updates: Partial<User>): Promise<User>;
-  deleteUser(id: string): Promise<boolean>;
+  updateUser(id: string, updates: Partial<User>): Promise<User | undefined>;
+  getAllUsers(): Promise<User[]>;
+  getUserStats(): Promise<{ total: number; growth: number }>;
 
-  // Environmental metrics operations
-  getEnvironmentalMetrics(userId: string, limit?: number): Promise<EnvironmentalMetrics[]>;
-  getLatestMetrics(userId: string): Promise<EnvironmentalMetrics | undefined>;
-  createEnvironmentalMetrics(metrics: InsertEnvironmentalMetrics): Promise<EnvironmentalMetrics>;
-  getMetricsByDateRange(userId: string, startDate: Date, endDate: Date): Promise<EnvironmentalMetrics[]>;
+  // Admin operations
+  getAdminByFirebaseUid(firebaseUid: string): Promise<AdminUser | undefined>;
+  createAdmin(admin: InsertAdminUser): Promise<AdminUser>;
 
-  // AI recommendations operations
-  getRecommendations(userId: string, status?: string): Promise<AiRecommendation[]>;
-  createRecommendation(recommendation: InsertAiRecommendation): Promise<AiRecommendation>;
-  updateRecommendation(id: string, updates: Partial<AiRecommendation>): Promise<AiRecommendation>;
-  deleteRecommendation(id: string): Promise<boolean>;
+  // Green actions operations
+  getGreenAction(id: string): Promise<GreenAction | undefined>;
+  createGreenAction(action: InsertGreenAction): Promise<GreenAction>;
+  updateGreenAction(id: string, updates: Partial<GreenAction>): Promise<GreenAction | undefined>;
+  getGreenActionsByUser(userId: string): Promise<GreenAction[]>;
+  getAllGreenActions(): Promise<GreenAction[]>;
+  getRecentGreenActions(limit?: number): Promise<GreenAction[]>;
+  getGreenActionsStats(): Promise<{ total: number; growth: number; byCategory: Record<string, number> }>;
 
-  // Chat messages operations
-  getChatMessages(userId: string, limit?: number): Promise<ChatMessage[]>;
-  createChatMessage(message: InsertChatMessage): Promise<ChatMessage>;
-  deleteChatHistory(userId: string): Promise<boolean>;
-
-  // Challenge operations
-  getChallenges(status?: string, category?: string): Promise<Challenge[]>;
-  getChallenge(id: string): Promise<Challenge | undefined>;
-  createChallenge(challenge: InsertChallenge): Promise<Challenge>;
-  updateChallenge(id: string, updates: Partial<Challenge>): Promise<Challenge>;
-  deleteChallenge(id: string): Promise<boolean>;
-
-  // Challenge participation operations
-  getChallengeParticipation(userId: string, challengeId?: string): Promise<ChallengeParticipation[]>;
-  createChallengeParticipation(participation: InsertChallengeParticipation): Promise<ChallengeParticipation>;
-  updateChallengeParticipation(id: string, updates: Partial<ChallengeParticipation>): Promise<ChallengeParticipation>;
-  leaveChallengeParticipation(userId: string, challengeId: string): Promise<boolean>;
-
-  // Leaderboard operations
-  getLeaderboard(period: string, limit?: number): Promise<LeaderboardEntry[]>;
-  getUserLeaderboardEntry(userId: string, period: string): Promise<LeaderboardEntry | undefined>;
-  updateLeaderboardEntry(userId: string, period: string, updates: Partial<LeaderboardEntry>): Promise<LeaderboardEntry>;
-
-  // Social posts operations
-  getSocialPosts(limit?: number, visibility?: string): Promise<SocialPost[]>;
-  getUserPosts(userId: string, limit?: number): Promise<SocialPost[]>;
-  createSocialPost(post: InsertSocialPost): Promise<SocialPost>;
-  updateSocialPost(id: string, updates: Partial<SocialPost>): Promise<SocialPost>;
-  deleteSocialPost(id: string): Promise<boolean>;
+  // Token transaction operations
+  createTokenTransaction(transaction: InsertEcoTokenTransaction): Promise<EcoTokenTransaction>;
+  getTokenTransactionsByUser(userId: string): Promise<EcoTokenTransaction[]>;
+  updateTokenTransaction(id: string, updates: Partial<EcoTokenTransaction>): Promise<EcoTokenTransaction | undefined>;
+  getTokenStats(): Promise<{ totalMinted: string; growth: number }>;
 }
 
 export class MemStorage implements IStorage {
   private users: Map<string, User>;
-  private environmentalMetrics: Map<string, EnvironmentalMetrics>;
-  private aiRecommendations: Map<string, AiRecommendation>;
-  private chatMessages: Map<string, ChatMessage>;
-  private challenges: Map<string, Challenge>;
-  private challengeParticipation: Map<string, ChallengeParticipation>;
-  private leaderboard: Map<string, LeaderboardEntry>;
-  private socialPosts: Map<string, SocialPost>;
+  private admins: Map<string, AdminUser>;
+  private greenActions: Map<string, GreenAction>;
+  private tokenTransactions: Map<string, EcoTokenTransaction>;
 
   constructor() {
     this.users = new Map();
-    this.environmentalMetrics = new Map();
-    this.aiRecommendations = new Map();
-    this.chatMessages = new Map();
-    this.challenges = new Map();
-    this.challengeParticipation = new Map();
-    this.leaderboard = new Map();
-    this.socialPosts = new Map();
-
-    // Initialize with sample data
-    this.initializeSampleData();
+    this.admins = new Map();
+    this.greenActions = new Map();
+    this.tokenTransactions = new Map();
+    
+    this.seedData();
   }
 
-  private initializeSampleData() {
-    // Sample challenges
-    const sampleChallenges: Challenge[] = [
+  private seedData() {
+    // Create a default admin user
+    const adminId = randomUUID();
+    const admin: AdminUser = {
+      id: adminId,
+      firebaseUid: 'admin-firebase-uid',
+      email: 'admin@ecox.com',
+      name: 'John Admin',
+      role: 'admin',
+      createdAt: new Date(),
+    };
+    this.admins.set(adminId, admin);
+
+    // Create some sample users
+    const users = [
       {
         id: randomUUID(),
-        name: "Zero Waste Week",
-        description: "Reduce waste to zero for 7 consecutive days",
-        type: "individual",
-        category: "waste",
-        difficulty: "intermediate",
-        duration: {
-          start: new Date(),
-          end: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-          durationDays: 7
-        },
-        status: "active",
-        participants: { current: 1247, target: 2000 },
-        rewards: {
-          points: 500,
-          badges: ["waste-warrior"],
-          achievements: ["zero-waste-champion"]
-        },
-        goals: {
-          target: 0,
-          unit: "kg",
-          description: "Produce zero waste for 7 days"
-        },
-        rules: [
-          "Track all waste produced",
-          "Document reduction strategies",
-          "Share daily progress"
-        ],
-        createdBy: "system",
-        createdAt: new Date(),
-        updatedAt: new Date()
+        firebaseUid: 'user1-firebase-uid',
+        email: 'sarah.chen@email.com',
+        name: 'Sarah Chen',
+        avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?ixlib=rb-4.0.3&auto=format&fit=crop&w=32&h=32',
+        ecoTokenBalance: '45.25000000',
+        totalActionsCompleted: 12,
+        createdAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+        updatedAt: new Date(),
       },
       {
         id: randomUUID(),
-        name: "Energy Saver Month",
-        description: "Reduce energy consumption by 20% this month",
-        type: "global",
-        category: "energy",
-        difficulty: "beginner",
-        duration: {
-          start: new Date(),
-          end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-          durationDays: 30
-        },
-        status: "active",
-        participants: { current: 892, target: 1500 },
-        rewards: {
-          points: 300,
-          badges: ["energy-saver"],
-          achievements: ["efficient-home"]
-        },
-        goals: {
-          target: 20,
-          unit: "%",
-          description: "Reduce energy consumption by 20%"
-        },
-        rules: [
-          "Monitor daily energy usage",
-          "Implement energy-saving measures",
-          "Report weekly progress"
-        ],
-        createdBy: "system",
-        createdAt: new Date(),
-        updatedAt: new Date()
+        firebaseUid: 'user2-firebase-uid', 
+        email: 'marcus.j@email.com',
+        name: 'Marcus Johnson',
+        avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=32&h=32',
+        ecoTokenBalance: '78.50000000',
+        totalActionsCompleted: 8,
+        createdAt: new Date(Date.now() - 45 * 24 * 60 * 60 * 1000),
+        updatedAt: new Date(),
+      },
+      {
+        id: randomUUID(),
+        firebaseUid: 'user3-firebase-uid',
+        email: 'emma.r@email.com', 
+        name: 'Emma Rodriguez',
+        avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-4.0.3&auto=format&fit=crop&w=32&h=32',
+        ecoTokenBalance: '234.75000000',
+        totalActionsCompleted: 25,
+        createdAt: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000),
+        updatedAt: new Date(),
       }
     ];
 
-    sampleChallenges.forEach(challenge => {
-      this.challenges.set(challenge.id, challenge);
-    });
+    users.forEach(user => this.users.set(user.id, user as User));
+
+    // Create sample green actions
+    const userArray = Array.from(this.users.values());
+    const actions = [
+      {
+        id: randomUUID(),
+        userId: userArray[0].id,
+        title: 'Recycled 5kg of plastic',
+        description: 'Properly sorted and recycled plastic waste',
+        category: 'recycling',
+        tokensEarned: '25.00000000',
+        status: 'verified',
+        verificationData: { confidence: 0.95, aiScore: 0.92 },
+        verifiedAt: new Date(Date.now() - 2 * 60 * 60 * 1000),
+        verifiedBy: 'AI',
+        createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000),
+      },
+      {
+        id: randomUUID(),
+        userId: userArray[1].id,
+        title: 'Bike to work for 1 week',
+        description: 'Used bicycle instead of car for daily commute',
+        category: 'transportation',
+        tokensEarned: '50.00000000',
+        status: 'pending',
+        createdAt: new Date(Date.now() - 5 * 60 * 60 * 1000),
+      },
+      {
+        id: randomUUID(),
+        userId: userArray[2].id,
+        title: 'Solar panel installation',
+        description: 'Installed 5kW solar panel system',
+        category: 'energy',
+        tokensEarned: '200.00000000',
+        status: 'verified',
+        verificationData: { confidence: 0.98, aiScore: 0.96 },
+        verifiedAt: new Date(Date.now() - 24 * 60 * 60 * 1000),
+        verifiedBy: 'AI',
+        createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000),
+      }
+    ];
+
+    actions.forEach(action => this.greenActions.set(action.id, action as GreenAction));
   }
 
   // User operations
@@ -175,12 +155,8 @@ export class MemStorage implements IStorage {
     return this.users.get(id);
   }
 
-  async getUserByEmail(email: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(user => user.email === email);
-  }
-
-  async getUserByFirebaseUID(firebaseUID: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(user => user.firebaseUID === firebaseUID);
+  async getUserByFirebaseUid(firebaseUid: string): Promise<User | undefined> {
+    return Array.from(this.users.values()).find(user => user.firebaseUid === firebaseUid);
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
@@ -188,16 +164,9 @@ export class MemStorage implements IStorage {
     const user: User = {
       ...insertUser,
       id,
-      challenges: insertUser.challenges || [],
-      achievements: insertUser.achievements || [],
-      preferences: insertUser.preferences || {
-        notifications: true,
-        publicProfile: true,
-        dataSharing: false
-      },
-      carbonFootprint: insertUser.carbonFootprint || '0',
-      energyUsage: insertUser.energyUsage || '0',
-      ecoScore: insertUser.ecoScore || 100,
+      avatar: insertUser.avatar || null,
+      ecoTokenBalance: '0',
+      totalActionsCompleted: 0,
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -205,281 +174,132 @@ export class MemStorage implements IStorage {
     return user;
   }
 
-  async updateUser(id: string, updates: Partial<User>): Promise<User> {
+  async updateUser(id: string, updates: Partial<User>): Promise<User | undefined> {
     const user = this.users.get(id);
-    if (!user) throw new Error("User not found");
-    
+    if (!user) return undefined;
+
     const updatedUser = { ...user, ...updates, updatedAt: new Date() };
     this.users.set(id, updatedUser);
     return updatedUser;
   }
 
-  async deleteUser(id: string): Promise<boolean> {
-    return this.users.delete(id);
+  async getAllUsers(): Promise<User[]> {
+    return Array.from(this.users.values());
   }
 
-  // Environmental metrics operations
-  async getEnvironmentalMetrics(userId: string, limit = 50): Promise<EnvironmentalMetrics[]> {
-    const userMetrics = Array.from(this.environmentalMetrics.values())
-      .filter(metric => metric.userId === userId)
-      .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
-      .slice(0, limit);
-    return userMetrics;
+  async getUserStats(): Promise<{ total: number; growth: number }> {
+    const total = this.users.size;
+    const growth = 12.5; // Mock growth percentage
+    return { total, growth };
   }
 
-  async getLatestMetrics(userId: string): Promise<EnvironmentalMetrics | undefined> {
-    const metrics = await this.getEnvironmentalMetrics(userId, 1);
-    return metrics[0];
+  // Admin operations
+  async getAdminByFirebaseUid(firebaseUid: string): Promise<AdminUser | undefined> {
+    return Array.from(this.admins.values()).find(admin => admin.firebaseUid === firebaseUid);
   }
 
-  async createEnvironmentalMetrics(insertMetrics: InsertEnvironmentalMetrics): Promise<EnvironmentalMetrics> {
+  async createAdmin(insertAdmin: InsertAdminUser): Promise<AdminUser> {
     const id = randomUUID();
-    const metrics: EnvironmentalMetrics = {
-      ...insertMetrics,
+    const admin: AdminUser = {
+      ...insertAdmin,
       id,
-      timestamp: new Date(),
-    };
-    this.environmentalMetrics.set(id, metrics);
-    return metrics;
-  }
-
-  async getMetricsByDateRange(userId: string, startDate: Date, endDate: Date): Promise<EnvironmentalMetrics[]> {
-    return Array.from(this.environmentalMetrics.values())
-      .filter(metric => 
-        metric.userId === userId && 
-        metric.timestamp >= startDate && 
-        metric.timestamp <= endDate
-      )
-      .sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
-  }
-
-  // AI recommendations operations
-  async getRecommendations(userId: string, status?: string): Promise<AiRecommendation[]> {
-    const userRecommendations = Array.from(this.aiRecommendations.values())
-      .filter(rec => rec.userId === userId && (!status || rec.status === status))
-      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
-    return userRecommendations;
-  }
-
-  async createRecommendation(insertRecommendation: InsertAiRecommendation): Promise<AiRecommendation> {
-    const id = randomUUID();
-    const recommendation: AiRecommendation = {
-      ...insertRecommendation,
-      id,
+      role: insertAdmin.role || 'admin',
       createdAt: new Date(),
-      updatedAt: new Date(),
     };
-    this.aiRecommendations.set(id, recommendation);
-    return recommendation;
+    this.admins.set(id, admin);
+    return admin;
   }
 
-  async updateRecommendation(id: string, updates: Partial<AiRecommendation>): Promise<AiRecommendation> {
-    const recommendation = this.aiRecommendations.get(id);
-    if (!recommendation) throw new Error("Recommendation not found");
-    
-    const updatedRecommendation = { ...recommendation, ...updates, updatedAt: new Date() };
-    this.aiRecommendations.set(id, updatedRecommendation);
-    return updatedRecommendation;
+  // Green actions operations
+  async getGreenAction(id: string): Promise<GreenAction | undefined> {
+    return this.greenActions.get(id);
   }
 
-  async deleteRecommendation(id: string): Promise<boolean> {
-    return this.aiRecommendations.delete(id);
-  }
-
-  // Chat messages operations
-  async getChatMessages(userId: string, limit = 50): Promise<ChatMessage[]> {
-    const userMessages = Array.from(this.chatMessages.values())
-      .filter(msg => msg.userId === userId)
-      .sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime())
-      .slice(-limit);
-    return userMessages;
-  }
-
-  async createChatMessage(insertMessage: InsertChatMessage): Promise<ChatMessage> {
+  async createGreenAction(insertAction: InsertGreenAction): Promise<GreenAction> {
     const id = randomUUID();
-    const message: ChatMessage = {
-      ...insertMessage,
+    const action: GreenAction = {
+      ...insertAction,
       id,
-      timestamp: new Date(),
-    };
-    this.chatMessages.set(id, message);
-    return message;
-  }
-
-  async deleteChatHistory(userId: string): Promise<boolean> {
-    const userMessageIds = Array.from(this.chatMessages.entries())
-      .filter(([_, msg]) => msg.userId === userId)
-      .map(([id, _]) => id);
-    
-    userMessageIds.forEach(id => this.chatMessages.delete(id));
-    return true;
-  }
-
-  // Challenge operations
-  async getChallenges(status?: string, category?: string): Promise<Challenge[]> {
-    let challenges = Array.from(this.challenges.values());
-    
-    if (status) {
-      challenges = challenges.filter(challenge => challenge.status === status);
-    }
-    
-    if (category) {
-      challenges = challenges.filter(challenge => challenge.category === category);
-    }
-    
-    return challenges.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
-  }
-
-  async getChallenge(id: string): Promise<Challenge | undefined> {
-    return this.challenges.get(id);
-  }
-
-  async createChallenge(insertChallenge: InsertChallenge): Promise<Challenge> {
-    const id = randomUUID();
-    const challenge: Challenge = {
-      ...insertChallenge,
-      id,
+      verifiedAt: null,
+      verifiedBy: null,
       createdAt: new Date(),
-      updatedAt: new Date(),
     };
-    this.challenges.set(id, challenge);
-    return challenge;
+    this.greenActions.set(id, action);
+    return action;
   }
 
-  async updateChallenge(id: string, updates: Partial<Challenge>): Promise<Challenge> {
-    const challenge = this.challenges.get(id);
-    if (!challenge) throw new Error("Challenge not found");
-    
-    const updatedChallenge = { ...challenge, ...updates, updatedAt: new Date() };
-    this.challenges.set(id, updatedChallenge);
-    return updatedChallenge;
+  async updateGreenAction(id: string, updates: Partial<GreenAction>): Promise<GreenAction | undefined> {
+    const action = this.greenActions.get(id);
+    if (!action) return undefined;
+
+    const updatedAction = { ...action, ...updates };
+    this.greenActions.set(id, updatedAction);
+    return updatedAction;
   }
 
-  async deleteChallenge(id: string): Promise<boolean> {
-    return this.challenges.delete(id);
+  async getGreenActionsByUser(userId: string): Promise<GreenAction[]> {
+    return Array.from(this.greenActions.values()).filter(action => action.userId === userId);
   }
 
-  // Challenge participation operations
-  async getChallengeParticipation(userId: string, challengeId?: string): Promise<ChallengeParticipation[]> {
-    let participations = Array.from(this.challengeParticipation.values())
-      .filter(participation => participation.userId === userId);
-    
-    if (challengeId) {
-      participations = participations.filter(participation => participation.challengeId === challengeId);
-    }
-    
-    return participations.sort((a, b) => b.joinedAt.getTime() - a.joinedAt.getTime());
+  async getAllGreenActions(): Promise<GreenAction[]> {
+    return Array.from(this.greenActions.values());
   }
 
-  async createChallengeParticipation(insertParticipation: InsertChallengeParticipation): Promise<ChallengeParticipation> {
+  async getRecentGreenActions(limit: number = 10): Promise<GreenAction[]> {
+    return Array.from(this.greenActions.values())
+      .sort((a, b) => (b.createdAt?.getTime() || 0) - (a.createdAt?.getTime() || 0))
+      .slice(0, limit);
+  }
+
+  async getGreenActionsStats(): Promise<{ total: number; growth: number; byCategory: Record<string, number> }> {
+    const actions = Array.from(this.greenActions.values());
+    const total = actions.length;
+    const growth = 23.1; // Mock growth percentage
+
+    const byCategory = actions.reduce((acc, action) => {
+      acc[action.category] = (acc[action.category] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+
+    return { total, growth, byCategory };
+  }
+
+  // Token transaction operations
+  async createTokenTransaction(insertTransaction: InsertEcoTokenTransaction): Promise<EcoTokenTransaction> {
     const id = randomUUID();
-    const participation: ChallengeParticipation = {
-      ...insertParticipation,
+    const transaction: EcoTokenTransaction = {
+      ...insertTransaction,
       id,
-      joinedAt: new Date(),
+      status: insertTransaction.status || 'pending',
+      createdAt: new Date(),
     };
-    this.challengeParticipation.set(id, participation);
-    return participation;
+    this.tokenTransactions.set(id, transaction);
+    return transaction;
   }
 
-  async updateChallengeParticipation(id: string, updates: Partial<ChallengeParticipation>): Promise<ChallengeParticipation> {
-    const participation = this.challengeParticipation.get(id);
-    if (!participation) throw new Error("Challenge participation not found");
+  async getTokenTransactionsByUser(userId: string): Promise<EcoTokenTransaction[]> {
+    return Array.from(this.tokenTransactions.values()).filter(tx => tx.userId === userId);
+  }
+
+  async updateTokenTransaction(id: string, updates: Partial<EcoTokenTransaction>): Promise<EcoTokenTransaction | undefined> {
+    const transaction = this.tokenTransactions.get(id);
+    if (!transaction) return undefined;
+
+    const updatedTransaction = { ...transaction, ...updates };
+    this.tokenTransactions.set(id, updatedTransaction);
+    return updatedTransaction;
+  }
+
+  async getTokenStats(): Promise<{ totalMinted: string; growth: number }> {
+    const transactions = Array.from(this.tokenTransactions.values());
+    const totalMinted = transactions
+      .filter(tx => tx.type === 'mint')
+      .reduce((sum, tx) => sum + parseFloat(tx.amount), 0);
     
-    const updatedParticipation = { ...participation, ...updates };
-    this.challengeParticipation.set(id, updatedParticipation);
-    return updatedParticipation;
-  }
-
-  async leaveChallengeParticipation(userId: string, challengeId: string): Promise<boolean> {
-    const participationId = Array.from(this.challengeParticipation.entries())
-      .find(([_, participation]) => participation.userId === userId && participation.challengeId === challengeId)?.[0];
-    
-    if (participationId) {
-      return this.challengeParticipation.delete(participationId);
-    }
-    
-    return false;
-  }
-
-  // Leaderboard operations
-  async getLeaderboard(period: string, limit = 50): Promise<LeaderboardEntry[]> {
-    return Array.from(this.leaderboard.values())
-      .filter(entry => entry.period === period)
-      .sort((a, b) => a.rank - b.rank)
-      .slice(0, limit);
-  }
-
-  async getUserLeaderboardEntry(userId: string, period: string): Promise<LeaderboardEntry | undefined> {
-    return Array.from(this.leaderboard.values())
-      .find(entry => entry.userId === userId && entry.period === period);
-  }
-
-  async updateLeaderboardEntry(userId: string, period: string, updates: Partial<LeaderboardEntry>): Promise<LeaderboardEntry> {
-    const existingEntry = await this.getUserLeaderboardEntry(userId, period);
-    
-    if (existingEntry) {
-      const updatedEntry = { ...existingEntry, ...updates, updatedAt: new Date() };
-      this.leaderboard.set(existingEntry.id, updatedEntry);
-      return updatedEntry;
-    } else {
-      const id = randomUUID();
-      const newEntry: LeaderboardEntry = {
-        id,
-        userId,
-        period,
-        rank: 999,
-        points: 0,
-        level: 1,
-        achievements: [],
-        badges: [],
-        streaks: { current: 0, longest: 0 },
-        stats: { challengesCompleted: 0, carbonSaved: 0, energySaved: 0 },
-        updatedAt: new Date(),
-        ...updates,
-      };
-      this.leaderboard.set(id, newEntry);
-      return newEntry;
-    }
-  }
-
-  // Social posts operations
-  async getSocialPosts(limit = 50, visibility = "public"): Promise<SocialPost[]> {
-    return Array.from(this.socialPosts.values())
-      .filter(post => post.visibility === visibility)
-      .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
-      .slice(0, limit);
-  }
-
-  async getUserPosts(userId: string, limit = 50): Promise<SocialPost[]> {
-    return Array.from(this.socialPosts.values())
-      .filter(post => post.authorId === userId)
-      .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
-      .slice(0, limit);
-  }
-
-  async createSocialPost(insertPost: InsertSocialPost): Promise<SocialPost> {
-    const id = randomUUID();
-    const post: SocialPost = {
-      ...insertPost,
-      id,
-      timestamp: new Date(),
+    return {
+      totalMinted: (totalMinted / 1000).toFixed(1) + 'K',
+      growth: 8.7
     };
-    this.socialPosts.set(id, post);
-    return post;
-  }
-
-  async updateSocialPost(id: string, updates: Partial<SocialPost>): Promise<SocialPost> {
-    const post = this.socialPosts.get(id);
-    if (!post) throw new Error("Social post not found");
-    
-    const updatedPost = { ...post, ...updates, editedAt: new Date() };
-    this.socialPosts.set(id, updatedPost);
-    return updatedPost;
-  }
-
-  async deleteSocialPost(id: string): Promise<boolean> {
-    return this.socialPosts.delete(id);
   }
 }
 

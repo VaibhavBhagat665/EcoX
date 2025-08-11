@@ -52,7 +52,7 @@ export const Header: React.FC = () => {
                 <span className="text-2xl font-black text-white tracking-tight">
                   Eco<span className="text-gradient-primary">X</span>
                 </span>
-                <span className="text-xs text-gray-400 font-medium -mt-1">Intelligence Platform</span>
+                <span className="text-xs text-gray-400 font-medium -mt-1">Environmental Intelligence Platform</span>
               </div>
             </Link>
 

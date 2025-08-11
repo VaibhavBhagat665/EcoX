@@ -3,16 +3,21 @@ import { pgTable, text, varchar, integer, timestamp, boolean, jsonb, decimal, in
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
-// Users table
+// Users table - Updated with missing fields
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   email: text("email").notNull().unique(),
+  name: text("name"), // Added name field
   displayName: text("display_name"),
+  avatar: text("avatar"), // Added avatar field
   photoURL: text("photo_url"),
   firebaseUID: text("firebase_uid").unique(),
+  firebaseUid: text("firebase_uid_alt").unique(), // Added alternative field name used in routes
   carbonFootprint: decimal("carbon_footprint", { precision: 10, scale: 2 }).default('0'),
   energyUsage: decimal("energy_usage", { precision: 10, scale: 2 }).default('0'),
   ecoScore: integer("eco_score").default(100),
+  ecoTokenBalance: decimal("eco_token_balance", { precision: 10, scale: 8 }).default('0.00000000'), // Added token balance
+  totalActionsCompleted: integer("total_actions_completed").default(0), // Added actions count
   challenges: jsonb("challenges").$type<string[]>().default([]),
   achievements: jsonb("achievements").$type<string[]>().default([]),
   preferences: jsonb("preferences").$type<{
@@ -25,6 +30,61 @@ export const users = pgTable("users", {
 }, (table) => ({
   emailIdx: index("users_email_idx").on(table.email),
   firebaseUidIdx: index("users_firebase_uid_idx").on(table.firebaseUID),
+  firebaseUidAltIdx: index("users_firebase_uid_alt_idx").on(table.firebaseUid),
+}));
+
+// Green actions table - NEW
+export const greenActions = pgTable("green_actions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  category: text("category", { 
+    enum: ['energy', 'waste', 'transportation', 'consumption', 'water'] 
+  }).notNull(),
+  description: text("description"),
+  tokensEarned: decimal("tokens_earned", { precision: 10, scale: 8 }).notNull(),
+  proofImages: jsonb("proof_images").$type<string[]>().default([]),
+  status: text("status", { enum: ['pending', 'verified', 'rejected'] }).default('pending'),
+  verificationData: jsonb("verification_data").$type<{
+    verified: boolean;
+    confidence: number;
+    aiAnalysis: string;
+    feedback?: string;
+  }>(),
+  verifiedAt: timestamp("verified_at"),
+  verifiedBy: text("verified_by"),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
+  updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
+}, (table) => ({
+  userIdIdx: index("green_actions_user_id_idx").on(table.userId),
+  statusIdx: index("green_actions_status_idx").on(table.status),
+  categoryIdx: index("green_actions_category_idx").on(table.category),
+  createdAtIdx: index("green_actions_created_at_idx").on(table.createdAt),
+}));
+
+// Eco token transactions table - NEW
+export const ecoTokenTransactions = pgTable("eco_token_transactions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  actionId: varchar("action_id").references(() => greenActions.id, { onDelete: "set null" }),
+  type: text("type", { enum: ['mint', 'burn', 'transfer'] }).notNull(),
+  amount: decimal("amount", { precision: 10, scale: 8 }).notNull(),
+  status: text("status", { enum: ['pending', 'confirmed', 'failed'] }).default('pending'),
+  blockchainTxHash: text("blockchain_tx_hash"),
+  fromAddress: text("from_address"),
+  toAddress: text("to_address"),
+  metadata: jsonb("metadata").$type<{
+    reason?: string;
+    description?: string;
+    gas?: number;
+    gasPrice?: string;
+  }>(),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
+  updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
+}, (table) => ({
+  userIdIdx: index("eco_token_transactions_user_id_idx").on(table.userId),
+  statusIdx: index("eco_token_transactions_status_idx").on(table.status),
+  typeIdx: index("eco_token_transactions_type_idx").on(table.type),
+  createdAtIdx: index("eco_token_transactions_created_at_idx").on(table.createdAt),
 }));
 
 // Environmental metrics table
@@ -251,6 +311,18 @@ export const insertUserSchema = createInsertSchema(users).omit({
   updatedAt: true,
 });
 
+export const insertGreenActionSchema = createInsertSchema(greenActions).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertEcoTokenTransactionSchema = createInsertSchema(ecoTokenTransactions).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 export const insertEnvironmentalMetricsSchema = createInsertSchema(environmentalMetrics).omit({
   id: true,
   timestamp: true,
@@ -287,6 +359,12 @@ export const insertSocialPostSchema = createInsertSchema(socialPosts).omit({
 // Type exports
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
+
+export type GreenAction = typeof greenActions.$inferSelect;
+export type InsertGreenAction = z.infer<typeof insertGreenActionSchema>;
+
+export type EcoTokenTransaction = typeof ecoTokenTransactions.$inferSelect;
+export type InsertEcoTokenTransaction = z.infer<typeof insertEcoTokenTransactionSchema>;
 
 export type EnvironmentalMetrics = typeof environmentalMetrics.$inferSelect;
 export type InsertEnvironmentalMetrics = z.infer<typeof insertEnvironmentalMetricsSchema>;

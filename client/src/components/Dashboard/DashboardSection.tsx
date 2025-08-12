@@ -23,8 +23,70 @@ interface AIRecommendation {
 }
 
 export const DashboardSection: React.FC = () => {
-  const { isAuthenticated } = useAuth();
-  const { generateRecommendations, recommendations, isLoading: aiLoading } = useAIRecommendations();
+  const { isAuthenticated, user } = useAuth();
+  const [profile, setProfile] = useState<any>(null);
+  const [tokenBalance, setTokenBalance] = useState('0');
+  const [isLoadingProfile, setIsLoadingProfile] = useState(false);
+
+  // Fetch user profile
+  const { data: profileData, isLoading: profileLoading } = useQuery({
+    queryKey: ['profile'],
+    queryFn: getProfile,
+    enabled: isAuthenticated
+  });
+
+  // Fetch transactions
+  const { data: transactions, isLoading: transactionsLoading } = useQuery({
+    queryKey: ['transactions', user?.uid],
+    queryFn: () => user ? getTransactions(user.uid) : Promise.resolve([]),
+    enabled: isAuthenticated && !!user
+  });
+
+  // Load token balance if user has wallet
+  useEffect(() => {
+    async function loadBalance() {
+      if (profileData?.walletAddress) {
+        try {
+          const balance = await readTokenBalance(profileData.walletAddress);
+          setTokenBalance(balance);
+        } catch (error) {
+          console.error('Failed to load token balance:', error);
+        }
+      }
+    }
+
+    loadBalance();
+  }, [profileData?.walletAddress]);
+
+  // Test mint function (only visible in development)
+  const handleTestMint = async () => {
+    if (!profileData?.walletAddress) {
+      alert('Please connect a wallet first');
+      return;
+    }
+
+    try {
+      setIsLoadingProfile(true);
+      const result = await mintTokens(profileData.walletAddress, 10, {
+        reason: 'Test mint from dashboard',
+        testMode: true
+      });
+
+      if (result.success) {
+        alert(`Test mint successful! TX: ${result.txHash}`);
+        // Reload balance
+        const newBalance = await readTokenBalance(profileData.walletAddress);
+        setTokenBalance(newBalance);
+      } else {
+        alert('Test mint failed');
+      }
+    } catch (error) {
+      console.error('Test mint failed:', error);
+      alert('Test mint failed');
+    } finally {
+      setIsLoadingProfile(false);
+    }
+  };
   
   // Simulate real-time metrics
   const [metrics, setMetrics] = useState<EnvironmentalMetrics>({

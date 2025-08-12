@@ -67,8 +67,8 @@ class BlockchainService {
         throw new Error('BLOCKCHAIN_RPC_URL is not configured');
       }
       
-      if (!this.contractAddress || this.contractAddress === '0x0000000000000000000000000000000000000000') {
-        throw new Error('ECO_TOKEN_CONTRACT_ADDRESS is not configured or is zero address');
+      if (!this.contractAddress || this.contractAddress === '0x0000000000000000000000000000000000000000' || this.contractAddress.includes('1234567890')) {
+        throw new Error('ECO_TOKEN_CONTRACT_ADDRESS is not configured or is placeholder address');
       }
 
       // Initialize provider

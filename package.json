@@ -8,7 +8,18 @@
     "build": "vite build && esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist",
     "start": "NODE_ENV=production node dist/index.js",
     "check": "tsc",
-    "db:push": "drizzle-kit push"
+    "db:push": "drizzle-kit push",
+    "start-dev": "concurrently \"cd client && npm run dev\" \"cd server && npm run dev\"",
+    "start-frontend": "cd client && npm run dev",
+    "start-backend": "cd server && npm run dev",
+    "build:all": "npm run build:frontend && npm run build:backend",
+    "build:frontend": "cd client && npm run build",
+    "build:backend": "cd server && npm run build",
+    "install:all": "npm install && cd client && npm install && cd server && npm install",
+    "seed:firestore": "cd server && tsx server/scripts/seedFirestore.ts seed",
+    "clear:firestore": "cd server && tsx server/scripts/seedFirestore.ts clear",
+    "docker:dev": "docker-compose -f docker-compose.dev.yml up --build",
+    "docker:down": "docker-compose -f docker-compose.dev.yml down"
   },
   "dependencies": {
     "@builder.io/react": "^8.2.6",

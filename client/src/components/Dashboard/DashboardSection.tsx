@@ -123,11 +123,38 @@ export const DashboardSection: React.FC = () => {
     }
   }, [liveMetrics]);
 
+  // Generate AI recommendations (mock for now)
+  const generateRecommendations = async () => {
+    if (!isAuthenticated) return;
+
+    setAiLoading(true);
+    // Simulate AI recommendation generation
+    setTimeout(() => {
+      setRecommendations([
+        {
+          id: '1',
+          title: 'Optimize Energy Usage',
+          description: 'Switch to LED lighting to reduce energy consumption by up to 75%',
+          impact: 'high',
+          category: 'Energy'
+        },
+        {
+          id: '2',
+          title: 'Reduce Water Waste',
+          description: 'Install low-flow fixtures to save water and earn more ECO tokens',
+          impact: 'medium',
+          category: 'Water'
+        }
+      ]);
+      setAiLoading(false);
+    }, 2000);
+  };
+
   useEffect(() => {
     if (isAuthenticated) {
       generateRecommendations();
     }
-  }, [isAuthenticated, generateRecommendations]);
+  }, [isAuthenticated]);
 
   const handleExpand3DView = () => {
     console.log('Opening 3D view...');

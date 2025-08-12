@@ -80,7 +80,8 @@ export const ChatWidget: React.FC = () => {
     const query = queries[action as keyof typeof queries];
     if (query && isAuthenticated && user) {
       setInputValue(query);
-      await handleSendMessage();
+      // Use setTimeout to ensure input value is set before calling handleSendMessage
+      setTimeout(() => handleSendMessage(), 100);
     }
   };
 

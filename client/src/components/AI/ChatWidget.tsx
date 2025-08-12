@@ -83,12 +83,9 @@ export const ChatWidget: React.FC = () => {
     }
   };
 
-  const handleSendMessage = async (e: React.FormEvent) => {
+  const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!inputValue.trim() || isLoading) return;
-
-    await sendContextualMessage(inputValue);
-    setInputValue('');
+    await handleSendMessage();
   };
 
   const handleToggleChat = () => {

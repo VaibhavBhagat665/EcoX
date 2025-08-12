@@ -1,12 +1,14 @@
 /**
  * AI microservice client for EcoX backend
- * Handles OCR, estimation, and verification with mock fallback
+ * Handles OCR, estimation, and verification with Gemini AI and mock fallback
  */
 
+import { analyzeEnvironmentalAction, chatWithGeminiAssistant, isGeminiAvailable } from './geminiAI';
+
 const AI_SERVICE_URL = process.env.AI_SERVICE_URL || '__SET_IN_REPLIT_SECRETS__';
-const MOCK_AI_SERVICE = process.env.MOCK_AI_SERVICE === 'true' || 
-                        AI_SERVICE_URL === '__SET_IN_REPLIT_SECRETS__' ||
-                        !AI_SERVICE_URL;
+const MOCK_AI_SERVICE = process.env.MOCK_AI_SERVICE === 'true' ||
+                        (AI_SERVICE_URL === '__SET_IN_REPLIT_SECRETS__' && !isGeminiAvailable()) ||
+                        (!AI_SERVICE_URL && !isGeminiAvailable());
 
 /**
  * AI Service Response Types

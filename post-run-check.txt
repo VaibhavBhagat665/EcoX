@@ -1,0 +1,159 @@
+EcoX Post-Installation Verification Guide
+=========================================
+
+After running `npm run start-dev`, perform these manual tests to verify the system is working correctly:
+
+## Test 1: User Authentication & Profile Loading
+┌─────────────────────────────────────────────────┐
+│ Login with Google → see profile populated      │
+└─────────────────────────────────────────────────┘
+
+Steps:
+1. Open http://localhost:3000 in your browser
+2. Click "Sign In" or "Connect Wallet" button
+3. Use Google Authentication (or mock auth if Firebase not configured)
+4. Navigate to Dashboard section
+5. Verify profile data appears (name, email, token balance, carbon saved)
+
+Expected Results:
+✅ User profile loads with data from Firestore/Mock
+✅ Navigation shows authenticated user state
+✅ Dashboard displays personalized metrics
+✅ No authentication errors in console
+
+Mock Mode Behavior:
+- Shows "Mock User" with sample profile data
+- Token balance shows simulated values
+- All features work without real Firebase
+
+Troubleshooting:
+❌ If authentication fails: Check Firebase configuration in Replit secrets
+❌ If profile is empty: Verify Firestore rules and data seeding
+❌ If page won't load: Check that both frontend (3000) and backend (5000) are running
+
+## Test 2: Environmental Action Submission
+┌─────────────────────────────────────────────────┐
+│ Submit sample action → verify → tokens credited │
+└─────────────────────────────────────────────────┘
+
+Steps:
+1. While logged in, navigate to "Action Submission" section
+2. Select action type (e.g., "Energy Efficiency")
+3. Fill out form with sample data:
+   - kWh: 450
+   - Description: "LED light upgrade"
+   - Upload image (optional)
+4. Click "Submit Action"
+5. Wait for action to appear in "Recent Actions"
+6. Click "Verify Action" (or wait for auto-verification)
+7. Check that tokens are credited to account
+
+Expected Results:
+✅ Action submits successfully (status: "pending")
+✅ AI verification runs (may take 1-3 seconds)
+✅ Action status changes to "verified" or "rejected"
+✅ If verified: ECO tokens are minted and credited
+✅ Transaction appears in user's transaction history
+✅ Leaderboard updates with new score
+
+Mock Mode Behavior:
+- AI verification returns predetermined results
+- Tokens are "minted" to mock blockchain
+- All verification pipelines work with simulated data
+
+Troubleshooting:
+❌ If submission fails: Check backend logs for API errors
+❌ If verification stalls: Verify AI service is responding
+❌ If no tokens credited: Check blockchain service configuration
+
+## Test 3: MetaMask Wallet Integration
+┌─────────────────────────────────────────────────┐
+│ Connect MetaMask → see ECO token balance update │
+└─────────────────────────────────────────────────┘
+
+Steps:
+1. Install MetaMask browser extension (if not installed)
+2. On the EcoX app, click "Connect Wallet" button
+3. Approve MetaMask connection request
+4. Verify wallet address appears in top-right corner
+5. Check that ECO token balance is displayed
+6. Click "Mint Test Token" button (if available in dev mode)
+7. Confirm transaction in MetaMask
+8. Verify balance updates after minting
+
+Expected Results:
+✅ MetaMask connects successfully
+✅ Wallet address displays in abbreviated format (0x1234...5678)
+✅ ECO token balance loads and displays
+✅ Test minting works (increases balance)
+✅ Balance refreshes automatically after transactions
+
+Mock Mode Behavior:
+- Simulates wallet connection even without MetaMask
+- Shows mock token balance
+- "Minting" updates the displayed balance without real blockchain interaction
+
+Troubleshooting:
+❌ If MetaMask won't connect: Check that it's unlocked and on correct network
+❌ If balance shows 0: Verify contract address and RPC URL configuration
+❌ If minting fails: Check that PRIVATE_KEY and contract settings are correct
+
+## Additional Verification Checks
+
+### Backend Health Check
+Visit: http://localhost:5000/api/profile
+Expected: Returns user profile JSON (or authentication error)
+
+### Frontend Build Check
+All CSS should load properly, no broken images or missing assets
+
+### Console Errors
+Check browser console for any red errors:
+✅ Should only see informational logs
+❌ No "Failed to fetch" or 500 errors
+
+### Network Tab
+In browser dev tools, verify:
+✅ API calls return 200 status codes
+✅ Response times are reasonable (< 5 seconds)
+
+### Performance Check
+✅ Page loads in under 3 seconds
+✅ Smooth animations and transitions
+✅ Responsive design works on mobile
+
+## Status Indicators
+
+🟢 ALL TESTS PASS: System is fully functional
+🟡 PARTIAL FUNCTIONALITY: Some features work, others in mock mode
+🔴 SYSTEM ISSUES: Critical errors preventing normal operation
+
+## Quick Fixes
+
+🔧 If backend won't start:
+   - Check port 5000 isn't already in use
+   - Verify all TypeScript compiles: `npm run check`
+
+🔧 If frontend won't start:
+   - Check port 3000 isn't already in use
+   - Clear node_modules and reinstall: `npm run install:all`
+
+🔧 If database/Firebase errors:
+   - Verify Replit secrets are set correctly
+   - Try running in mock mode first
+   - Seed sample data: `npm run seed:firestore`
+
+🔧 If blockchain errors:
+   - Verify RPC URL is accessible
+   - Check private key format (64 hex chars, no 0x)
+   - Enable mock mode: set MOCK_BLOCKCHAIN_SERVICE=true
+
+═══════════════════════════════════════════════════
+
+✨ SUCCESS CRITERIA:
+All three tests complete successfully, with user able to:
+- Authenticate and see profile
+- Submit actions and receive token rewards  
+- Connect wallet and view real-time balance
+
+This confirms the full integration is working correctly!

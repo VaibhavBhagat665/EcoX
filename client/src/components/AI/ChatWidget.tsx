@@ -224,7 +224,7 @@ export const ChatWidget: React.FC = () => {
               </div>
 
               {/* Chat Input */}
-              <form onSubmit={handleSendMessage} className="flex space-x-2 mb-3">
+              <form onSubmit={handleFormSubmit} className="flex space-x-2 mb-3">
                 <Input
                   type="text"
                   value={inputValue}

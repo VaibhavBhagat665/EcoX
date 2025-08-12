@@ -299,6 +299,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Health check endpoint
+  app.get("/api/health", (req: Request, res: Response) => {
+    res.json({
+      status: 'ok',
+      timestamp: new Date().toISOString(),
+      services: {
+        firebase: !isMockMode(),
+        blockchain: !isBlockchainMockMode(),
+        ai: !isAIMockMode()
+      }
+    });
+  });
+
   // Legacy routes for compatibility
   app.post("/api/auth/register", async (req: AuthenticatedRequest, res: Response) => {
     try {

@@ -10,6 +10,11 @@ import { verifyUserAction } from "./services/verifyAction";
 import { mintTokens, burnTokens, getTokenBalance, isBlockchainMockMode } from "./lib/blockchain";
 import { getFirestore, MockFirestore, isMockMode } from "./lib/firebase";
 import { chatWithAssistant, isAIMockMode } from "./lib/aiClient";
+import database from "./lib/database";
+import fileUploadService, { upload, processUploadedFile, validateCarbonFile } from "./lib/fileUpload";
+import mlService, { calculateCarbonWithML, analyzeImageWithML, getMLRecommendations } from "./lib/mlService";
+import path from "path";
+import fs from "fs";
 
 export async function registerRoutes(app: Express): Promise<Server> {
 

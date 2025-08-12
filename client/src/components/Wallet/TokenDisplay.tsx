@@ -24,11 +24,22 @@ export function TokenDisplay({ onClick }: TokenDisplayProps) {
       setIsLoading(true);
       try {
         // Try to get balance from user profile or API
-        if (user.walletAddress) {
-          const response = await getTokenBalance(user.walletAddress);
-          setBalance(response.balance || '0');
+        if (user.uid) {
+          // Use user ID to get token balance from database
+          try {
+            const response = await getTokenBalance(user.uid);
+            setBalance(response.balance || '0');
+          } catch (apiError) {
+            // If API fails, check if user has walletAddress
+            if ((user as any).walletAddress) {
+              const response = await getTokenBalance((user as any).walletAddress);
+              setBalance(response.balance || '0');
+            } else {
+              // Default to 0 for new users without wallet
+              setBalance('0');
+            }
+          }
         } else {
-          // Default to 0 for new users
           setBalance('0');
         }
       } catch (error) {

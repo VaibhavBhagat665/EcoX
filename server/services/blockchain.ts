@@ -66,17 +66,22 @@ class BlockchainService {
       const network = await this.provider.getNetwork();
       console.log(`Connected to network: ${network.name} (Chain ID: ${network.chainId})`);
       
-      // Initialize wallet if private key is provided
-      if (process.env.PRIVATE_KEY) {
-        this.wallet = new ethers.Wallet(process.env.PRIVATE_KEY, this.provider);
-        console.log(`Wallet address: ${this.wallet.address}`);
-        
-        // Check wallet balance
-        const balance = await this.provider.getBalance(this.wallet.address);
-        console.log(`Wallet balance: ${ethers.formatEther(balance)} MATIC`);
-        
-        if (balance === BigInt(0)) {
-          console.warn('⚠️ Warning: Wallet has no MATIC for gas fees');
+      // Initialize wallet if private key is provided and valid
+      if (process.env.PRIVATE_KEY && this.isValidPrivateKey(process.env.PRIVATE_KEY)) {
+        try {
+          this.wallet = new ethers.Wallet(process.env.PRIVATE_KEY, this.provider);
+          console.log(`Wallet address: ${this.wallet.address}`);
+
+          // Check wallet balance
+          const balance = await this.provider.getBalance(this.wallet.address);
+          console.log(`Wallet balance: ${ethers.formatEther(balance)} MATIC`);
+
+          if (balance === BigInt(0)) {
+            console.warn('⚠️ Warning: Wallet has no MATIC for gas fees');
+          }
+        } catch (error) {
+          console.warn('⚠️ Warning: Invalid private key provided. Running in read-only mode.');
+          this.wallet = null;
         }
       } else {
         console.warn('⚠️ Warning: PRIVATE_KEY not provided. Read-only mode enabled.');

@@ -23,9 +23,14 @@ export function TokenDisplay({ onClick }: TokenDisplayProps) {
 
       setIsLoading(true);
       try {
-        // Try to get balance from API (mock or real)
-        const mockBalance = Math.floor(Math.random() * 500) + 50; // Mock balance for demo
-        setBalance(mockBalance.toString());
+        // Try to get balance from user profile or API
+        if (user.walletAddress) {
+          const response = await getTokenBalance(user.walletAddress);
+          setBalance(response.balance || '0');
+        } else {
+          // Default to 0 for new users
+          setBalance('0');
+        }
       } catch (error) {
         console.error('Failed to load token balance:', error);
         setBalance('0');

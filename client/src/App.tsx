@@ -28,12 +28,14 @@ function App() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <div className="min-h-screen gradient-bg">
-          <Toaster />
-          <Router />
-        </div>
-      </TooltipProvider>
+      <AuthProvider>
+        <TooltipProvider>
+          <div className="min-h-screen gradient-bg">
+            <Toaster />
+            <Router />
+          </div>
+        </TooltipProvider>
+      </AuthProvider>
     </QueryClientProvider>
   );
 }

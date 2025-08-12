@@ -5,7 +5,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { getTokenBalance } from '@/lib/api';
+import { getProfile } from '@/lib/api';
 import { Coins, Loader2 } from 'lucide-react';
 
 interface TokenDisplayProps {

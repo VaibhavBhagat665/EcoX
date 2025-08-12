@@ -299,6 +299,60 @@ export async function verifyActionData(data: {
 }
 
 /**
+ * Chat with AI assistant
+ */
+export async function chatWithAssistant(userId: string, message: string): Promise<{
+  response: string;
+  timestamp: string;
+  userId: string;
+}> {
+  console.log(`💬 Chat request from ${userId}: ${message}`);
+
+  if (MOCK_AI_SERVICE) {
+    // Mock AI chat response
+    await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 2000));
+
+    const mockResponses = [
+      `Hello! I understand you said: "${message}". As your EcoX assistant, I'm here to help you with environmental actions, token management, and sustainability tips. How can I assist you today?`,
+      `Great question about "${message}"! Based on your profile, I'd recommend focusing on energy efficiency actions first, as they typically yield the highest token rewards. Would you like specific suggestions?`,
+      `Thank you for asking about "${message}". I see you've been active with environmental actions. Keep up the great work! Your carbon footprint reduction is making a real difference.`,
+      `Regarding "${message}" - this is a common sustainability question. I can help you track the environmental impact and suggest ways to earn more ECO tokens through verified actions.`
+    ];
+
+    const response = mockResponses[Math.floor(Math.random() * mockResponses.length)];
+
+    return {
+      response,
+      timestamp: new Date().toISOString(),
+      userId
+    };
+  }
+
+  try {
+    const result = await makeAIRequest('/chat', {
+      userId,
+      message,
+      context: 'environmental_assistant',
+      features: ['eco_actions', 'token_advice', 'sustainability_tips']
+    });
+
+    return {
+      response: result.response || 'I apologize, but I encountered an issue processing your request.',
+      timestamp: new Date().toISOString(),
+      userId
+    };
+  } catch (error) {
+    console.error('Chat request failed:', error);
+
+    return {
+      response: `I understand you said: "${message}". I'm currently experiencing some technical difficulties, but I'm here to help with your environmental journey. Please try again in a moment.`,
+      timestamp: new Date().toISOString(),
+      userId
+    };
+  }
+}
+
+/**
  * Check if AI service is in mock mode
  */
 export function isAIMockMode(): boolean {

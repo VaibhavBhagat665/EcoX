@@ -7,11 +7,15 @@ import { AuthModal } from '@/components/Auth/AuthModal';
 import { TokenDisplay } from '@/components/Wallet/TokenDisplay';
 
 export const Header: React.FC = () => {
-  const [location] = useLocation();
+  const [location, setLocation] = useRouter();
   const [showAuth, setShowAuth] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const { user, isAuthenticated, signOut } = useAuth();
   const { isListening, toggleListening, isSupported } = useVoiceAssistant();
+
+  const handleTokensClick = () => {
+    setLocation('/tokens');
+  };
 
   const navigation = [
     { name: 'Home', href: '/', id: 'home' },

@@ -108,7 +108,7 @@ export function TokenTradingPanel() {
         balance,
         value: numBalance * ecoTokenPrice,
         totalEarned: numBalance,
-        pendingRewards: Math.floor(Math.random() * 10) // Mock pending rewards
+        pendingRewards: 0 // Start with 0 pending rewards for new users
       }));
     } catch (error) {
       console.error('Failed to load token balance:', error);

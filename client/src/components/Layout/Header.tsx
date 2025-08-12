@@ -90,6 +90,9 @@ export const Header: React.FC = () => {
                 </button>
               )}
 
+              {/* Token Display */}
+              <TokenDisplay onClick={() => window.location.href = '/tokens'} />
+
               {/* User Profile / Auth */}
               {isAuthenticated && user ? (
                 <div className="flex items-center space-x-3">

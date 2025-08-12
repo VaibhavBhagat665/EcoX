@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { useAIChat } from '@/lib/ai';
+import { chatWithAssistant } from '@/lib/api';
 import { useAuth } from '@/hooks/useAuth';
 
 interface ChatMessage {

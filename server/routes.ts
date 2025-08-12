@@ -286,24 +286,99 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/chat", verifyFirebaseToken, async (req: AuthenticatedRequest, res: Response) => {
     try {
       const { message } = req.body;
-      const userId = req.user!.uid;
+      const userId = req.user?.uid || 'unknown';
 
       if (!message) {
         res.status(400).json({ error: 'Message required' });
         return;
       }
 
-      // Mock chat response for now
-      const mockResponse = {
-        response: `Hello! I understand you said: "${message}". As your EcoX assistant, I'm here to help you with environmental actions, token management, and sustainability tips. How can I assist you today?`,
-        timestamp: new Date().toISOString(),
-        userId
-      };
-
-      res.json(mockResponse);
+      const response = await chatWithAssistant(userId, message);
+      res.json(response);
     } catch (error: any) {
       console.error('Chat error:', error);
       res.status(500).json({ error: 'Chat failed' });
+    }
+  });
+
+  // File Upload for Carbon Calculation - POST /api/upload
+  app.post("/api/upload", verifyFirebaseToken, upload.single('file'), async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      if (!req.file) {
+        res.status(400).json({ error: 'No file uploaded' });
+        return;
+      }
+
+      const userId = req.user?.uid || 'unknown';
+
+      // Validate file for carbon calculation
+      const validation = validateCarbonFile(req.file);
+      if (!validation.valid) {
+        // Clean up uploaded file
+        fs.unlinkSync(req.file.path);
+        res.status(400).json({ error: validation.message });
+        return;
+      }
+
+      // Process the uploaded file
+      const processedFile = await processUploadedFile(req.file, userId);
+
+      res.json({
+        success: true,
+        file: processedFile,
+        message: 'File uploaded successfully'
+      });
+
+    } catch (error: any) {
+      console.error('File upload error:', error);
+      res.status(500).json({ error: 'File upload failed' });
+    }
+  });
+
+  // Advanced Carbon Calculation - POST /api/calculate-carbon
+  app.post("/api/calculate-carbon", verifyFirebaseToken, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const { energyData } = req.body;
+
+      if (!energyData || !energyData.kWh) {
+        res.status(400).json({ error: 'Energy data with kWh required' });
+        return;
+      }
+
+      // Use ML service for calculation
+      const mlResult = await calculateCarbonWithML({
+        kWh: energyData.kWh,
+        type: energyData.type || 'electricity_grid',
+        household_size: energyData.household_size || 2
+      });
+
+      res.json({
+        success: true,
+        result: mlResult,
+        timestamp: new Date().toISOString()
+      });
+
+    } catch (error: any) {
+      console.error('Carbon calculation error:', error);
+      res.status(500).json({ error: 'Carbon calculation failed' });
+    }
+  });
+
+  // Serve uploaded files - GET /uploads/:filename
+  app.get("/uploads/:filename", (req: Request, res: Response) => {
+    try {
+      const filename = req.params.filename;
+      const filePath = path.join(process.cwd(), 'uploads', filename);
+
+      if (!fs.existsSync(filePath)) {
+        res.status(404).json({ error: 'File not found' });
+        return;
+      }
+
+      res.sendFile(filePath);
+    } catch (error) {
+      console.error('File serving error:', error);
+      res.status(500).json({ error: 'File serving failed' });
     }
   });
 

@@ -6,6 +6,7 @@ import { DashboardSection } from '@/components/Dashboard/DashboardSection';
 import { AIFeaturesSection } from '@/components/AI/AIFeaturesSection';
 import { CommunitySection } from '@/components/Community/CommunitySection';
 import { ChatWidget } from '@/components/AI/ChatWidget';
+import { TokenTradingPanel } from '@/components/Wallet/TokenTradingPanel';
 
 export const Home: React.FC = () => {
   return (

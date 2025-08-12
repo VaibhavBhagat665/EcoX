@@ -4,7 +4,7 @@
  */
 
 import React from 'react';
-import { useRouter } from 'wouter';
+import { useLocation } from 'wouter';
 import { Header } from '@/components/Layout/Header';
 import { Footer } from '@/components/Layout/Footer';
 import { TokenTradingPanel } from '@/components/Wallet/TokenTradingPanel';

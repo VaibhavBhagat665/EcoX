@@ -94,7 +94,7 @@ export const Header: React.FC = () => {
               )}
 
               {/* Token Display */}
-              <TokenDisplay onClick={() => window.location.href = '/tokens'} />
+              <TokenDisplay onClick={handleTokensClick} />
 
               {/* User Profile / Auth */}
               {isAuthenticated && user ? (

@@ -13,6 +13,7 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={Home} />
+      <Route path="/tokens" component={Tokens} />
       <Route component={NotFound} />
     </Switch>
   );

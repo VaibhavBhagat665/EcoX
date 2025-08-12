@@ -101,7 +101,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const result = await verifyUserAction(actionId);
-      res.json(result);
+      res.json({
+        ...result,
+        aiAnalysis: result.aiAnalysis || 'Verification completed'
+      });
     } catch (error: any) {
       console.error('Action verification error:', error);
       res.status(500).json({ error: 'Verification failed' });

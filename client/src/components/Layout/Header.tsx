@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 import { useVoiceAssistant } from '@/hooks/useVoiceAssistant';
 import { AuthModal } from '@/components/Auth/AuthModal';
+import { TokenDisplay } from '@/components/Wallet/TokenDisplay';
 
 export const Header: React.FC = () => {
   const [location] = useLocation();

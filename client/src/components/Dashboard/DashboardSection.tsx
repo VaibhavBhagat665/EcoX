@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
-import { useAIRecommendations } from '@/lib/ai';
+import { getProfile, getTransactions, mintTokens } from '@/lib/api';
+import { readTokenBalance } from '@/lib/web3';
 
 interface EnvironmentalMetrics {
   temperature: number;

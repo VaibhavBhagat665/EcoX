@@ -18,9 +18,9 @@ export async function fetchJSON(path: string, options: ApiOptions = {}): Promise
   
   const url = `${API_BASE_URL}${path}`;
   
-  const headers: HeadersInit = {
+  const headers: Record<string, string> = {
     'Content-Type': 'application/json',
-    ...fetchOptions.headers,
+    ...(fetchOptions.headers as Record<string, string>),
   };
 
   // Add Firebase ID token if auth required and available

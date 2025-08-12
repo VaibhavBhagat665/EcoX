@@ -26,7 +26,7 @@ import {
 
 export const Tokens: React.FC = () => {
   const { isAuthenticated } = useAuth();
-  const [location, setLocation] = useRouter();
+  const [location, setLocation] = useLocation();
 
   const handleBackToHome = () => {
     setLocation('/');

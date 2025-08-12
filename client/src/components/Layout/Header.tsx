@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useLocation, useRouter } from 'wouter';
+import { Link, useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 import { useVoiceAssistant } from '@/hooks/useVoiceAssistant';

@@ -116,8 +116,7 @@ export async function optionalAuth(
         req.user = {
           uid: decodedToken.uid,
           email: decodedToken.email,
-          name: decodedToken.name,
-          ...decodedToken
+          name: decodedToken.name
         };
         req.isAuthenticated = true;
       }

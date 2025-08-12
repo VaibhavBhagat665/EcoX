@@ -207,8 +207,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const result = await burnTokens(address, amount, {
-        userId: req.user!.uid,
-        requestedBy: req.user!.email
+        userId: req.user?.uid || 'unknown',
+        requestedBy: req.user?.email || 'unknown'
       });
 
       res.json({

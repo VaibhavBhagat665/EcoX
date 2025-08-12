@@ -7,7 +7,7 @@ import { AuthModal } from '@/components/Auth/AuthModal';
 import { TokenDisplay } from '@/components/Wallet/TokenDisplay';
 
 export const Header: React.FC = () => {
-  const [location, setLocation] = useRouter();
+  const [location, setLocation] = useLocation();
   const [showAuth, setShowAuth] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const { user, isAuthenticated, signOut } = useAuth();

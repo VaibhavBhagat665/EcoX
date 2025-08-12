@@ -215,7 +215,7 @@ export async function verifyActionData(data: {
     let confidence = 0;
     let aiAnalysis = '';
     let extractedData = null;
-    let estimatedImpact = null;
+    let estimatedImpact: EstimationResult | undefined = undefined;
 
     if (data.imageUrl) {
       // Step 1: Verify image authenticity

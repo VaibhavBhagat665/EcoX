@@ -20,6 +20,23 @@ export const Home: React.FC = () => {
       <main className="pt-16 md:pt-20">
         <HeroSection />
         <DashboardSection />
+
+        {/* Token Trading & Wallet Section */}
+        <section className="section-padding bg-gradient-to-br from-black via-gray-900 to-black" id="tokens">
+          <div className="container mx-auto max-w-7xl container-padding">
+            <div className="text-center mb-12">
+              <h2 className="heading-lg mb-6 text-white">
+                Your <span className="text-gradient-primary">ECO Tokens</span>
+              </h2>
+              <p className="text-xl text-gray-300 max-w-3xl mx-auto leading-relaxed">
+                Earn, trade, and manage your environmental impact tokens. Get rewarded for making the world more sustainable.
+              </p>
+              <div className="w-24 h-1 bg-gradient-to-r from-green-400 to-blue-500 mx-auto mt-6 rounded-full"></div>
+            </div>
+            <TokenTradingPanel />
+          </div>
+        </section>
+
         <AIFeaturesSection />
         <CommunitySection />
       </main>

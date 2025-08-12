@@ -345,7 +345,22 @@ export async function chatWithAssistant(userId: string, message: string): Promis
 }> {
   console.log(`💬 Chat request from ${userId}: ${message}`);
 
-  if (MOCK_AI_SERVICE) {
+  // Try Gemini AI first if available
+  if (isGeminiAvailable()) {
+    try {
+      console.log('🤖 Using Gemini AI for chat response');
+      const geminiResponse = await chatWithGeminiAssistant(message);
+      return {
+        response: geminiResponse.response,
+        timestamp: geminiResponse.timestamp,
+        userId
+      };
+    } catch (geminiError) {
+      console.warn('Gemini chat failed, falling back to mock:', geminiError);
+    }
+  }
+
+  if (MOCK_AI_SERVICE || !isGeminiAvailable()) {
     // Mock AI chat response
     await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 2000));
 

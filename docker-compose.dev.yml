@@ -1,0 +1,200 @@
+# Docker Compose for EcoX Development Environment
+version: '3.8'
+
+services:
+  # Frontend service
+  frontend:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - VITE_API_BASE_URL=http://backend:5000
+      - VITE_BLOCKCHAIN_RPC_URL=${VITE_BLOCKCHAIN_RPC_URL:-https://eth-mainnet.alchemyapi.io/v2/demo}
+      - VITE_ECO_TOKEN_CONTRACT_ADDRESS=${VITE_ECO_TOKEN_CONTRACT_ADDRESS:-0x1234567890123456789012345678901234567890}
+      - VITE_FIREBASE_API_KEY=${VITE_FIREBASE_API_KEY:-__SET_IN_REPLIT_SECRETS__}
+      - VITE_FIREBASE_PROJECT_ID=${VITE_FIREBASE_PROJECT_ID:-__SET_IN_REPLIT_SECRETS__}
+      - VITE_FIREBASE_AUTH_DOMAIN=${VITE_FIREBASE_AUTH_DOMAIN:-your-project.firebaseapp.com}
+      - VITE_FIREBASE_STORAGE_BUCKET=${VITE_FIREBASE_STORAGE_BUCKET:-your-project.firebasestorage.app}
+      - VITE_FIREBASE_MESSAGING_SENDER_ID=${VITE_FIREBASE_MESSAGING_SENDER_ID:-__SET_IN_REPLIT_SECRETS__}
+      - VITE_FIREBASE_APP_ID=${VITE_FIREBASE_APP_ID:-__SET_IN_REPLIT_SECRETS__}
+    depends_on:
+      - backend
+    volumes:
+      - ./client:/app
+      - /app/node_modules
+    networks:
+      - ecox-network
+    restart: unless-stopped
+
+  # Backend service  
+  backend:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    ports:
+      - "5000:5000"
+    environment:
+      - NODE_ENV=development
+      - PORT=5000
+      - CORS_ORIGINS=http://localhost:3000,http://frontend:3000
+      
+      # Mock mode flags (set to false when real services are configured)
+      - MOCK_FIREBASE_SERVICE=${MOCK_FIREBASE_SERVICE:-true}
+      - MOCK_BLOCKCHAIN_SERVICE=${MOCK_BLOCKCHAIN_SERVICE:-true} 
+      - MOCK_AI_SERVICE=${MOCK_AI_SERVICE:-true}
+      
+      # Firebase Admin (use Replit secrets in production)
+      - FIREBASE_PROJECT_ID=${FIREBASE_PROJECT_ID:-__SET_IN_REPLIT_SECRETS__}
+      - FIREBASE_PRIVATE_KEY=${FIREBASE_PRIVATE_KEY:-__SET_IN_REPLIT_SECRETS__}
+      - FIREBASE_CLIENT_EMAIL=${FIREBASE_CLIENT_EMAIL:-__SET_IN_REPLIT_SECRETS__}
+      - FIREBASE_DATABASE_URL=${FIREBASE_DATABASE_URL:-https://your-project-default-rtdb.firebaseio.com/}
+      
+      # Blockchain configuration
+      - BLOCKCHAIN_RPC_URL=${BLOCKCHAIN_RPC_URL:-https://eth-mainnet.alchemyapi.io/v2/demo}
+      - ECO_TOKEN_CONTRACT_ADDRESS=${ECO_TOKEN_CONTRACT_ADDRESS:-0x1234567890123456789012345678901234567890}
+      - PRIVATE_KEY=${PRIVATE_KEY:-__SET_IN_REPLIT_SECRETS__}
+      - GAS_LIMIT=${GAS_LIMIT:-100000}
+      - GAS_PRICE_GWEI=${GAS_PRICE_GWEI:-30}
+      
+      # Backend features
+      - BACKEND_ALLOW_MINT=${BACKEND_ALLOW_MINT:-true}
+      
+      # AI Service
+      - AI_SERVICE_URL=${AI_SERVICE_URL:-__SET_IN_REPLIT_SECRETS__}
+      - AI_SERVICE_API_KEY=${AI_SERVICE_API_KEY:-__SET_IN_REPLIT_SECRETS__}
+      
+      # Security
+      - JWT_SECRET=${JWT_SECRET:-dev_jwt_secret_change_in_production}
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY:-dev_encryption_key_change_in_production}
+      
+      # Database (if using PostgreSQL)
+      - DATABASE_URL=${DATABASE_URL:-postgresql://postgres:password@postgres:5432/ecox_db}
+      
+    depends_on:
+      - postgres
+      - hardhat
+    volumes:
+      - ./server:/app
+      - /app/node_modules
+    networks:
+      - ecox-network
+    restart: unless-stopped
+
+  # PostgreSQL database (optional - can use Firestore instead)
+  postgres:
+    image: postgres:15-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=ecox_db
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./server/scripts/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - ecox-network
+    restart: unless-stopped
+
+  # Local Hardhat blockchain node
+  hardhat:
+    image: node:18-alpine
+    ports:
+      - "8545:8545"
+    working_dir: /app
+    command: >
+      sh -c "
+        npm install -g hardhat &&
+        npx hardhat node --hostname 0.0.0.0 --port 8545
+      "
+    environment:
+      - NODE_ENV=development
+    volumes:
+      - hardhat_data:/app
+    networks:
+      - ecox-network
+    restart: unless-stopped
+
+  # Redis (for caching and sessions)
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    networks:
+      - ecox-network
+    restart: unless-stopped
+
+  # Nginx reverse proxy (optional)
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - frontend
+      - backend
+    networks:
+      - ecox-network
+    restart: unless-stopped
+    profiles:
+      - production
+
+  # Health check service
+  healthcheck:
+    image: curlimages/curl:latest
+    command: >
+      sh -c "
+        while true; do
+          echo 'Health check running...'
+          curl -f http://backend:5000/api/health || echo 'Backend health check failed'
+          curl -f http://frontend:3000/ || echo 'Frontend health check failed'
+          sleep 30
+        done
+      "
+    depends_on:
+      - frontend
+      - backend
+    networks:
+      - ecox-network
+    restart: unless-stopped
+    profiles:
+      - monitoring
+
+volumes:
+  postgres_data:
+  hardhat_data:
+  redis_data:
+
+networks:
+  ecox-network:
+    driver: bridge
+
+# Usage Instructions:
+# 
+# Development (all services):
+#   docker-compose -f docker-compose.dev.yml up --build
+#
+# Development (minimal - no blockchain):
+#   docker-compose -f docker-compose.dev.yml up frontend backend postgres
+#
+# Production (with nginx):
+#   docker-compose -f docker-compose.dev.yml --profile production up
+#
+# With monitoring:
+#   docker-compose -f docker-compose.dev.yml --profile monitoring up
+#
+# Seed the database:
+#   docker-compose -f docker-compose.dev.yml exec backend npm run seed:firestore seed
+#
+# View logs:
+#   docker-compose -f docker-compose.dev.yml logs -f backend
+#   docker-compose -f docker-compose.dev.yml logs -f frontend

@@ -65,8 +65,10 @@ export async function verifyFirebaseToken(
       uid: decodedToken.uid,
       email: decodedToken.email,
       name: decodedToken.name,
-      // Add other relevant fields from the token
-      ...decodedToken
+      // Add other relevant fields from the token (excluding uid to avoid duplication)
+      ...Object.fromEntries(
+        Object.entries(decodedToken).filter(([key]) => key !== 'uid' && key !== 'email' && key !== 'name')
+      )
     };
     req.isAuthenticated = true;
 

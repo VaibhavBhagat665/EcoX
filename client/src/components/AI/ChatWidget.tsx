@@ -78,8 +78,9 @@ export const ChatWidget: React.FC = () => {
     };
 
     const query = queries[action as keyof typeof queries];
-    if (query) {
-      await sendContextualMessage(query);
+    if (query && isAuthenticated && user) {
+      setInputValue(query);
+      await handleSendMessage();
     }
   };
 

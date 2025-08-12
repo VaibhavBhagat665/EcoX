@@ -1,0 +1,39 @@
+{
+  "name": "ecox-fullstack",
+  "version": "1.0.0",
+  "description": "EcoX Full-Stack Environmental Tracking Application",
+  "scripts": {
+    "start-dev": "concurrently \"cd client && npm run dev\" \"cd server && npm run dev\"",
+    "start-frontend": "cd client && npm run dev",
+    "start-backend": "cd server && npm run dev", 
+    "build": "npm run build:frontend && npm run build:backend",
+    "build:frontend": "cd client && npm run build",
+    "build:backend": "cd server && npm run build",
+    "install:all": "npm install && cd client && npm install && cd ../server && npm install",
+    "seed:firestore": "cd server && npm run seed:firestore",
+    "test": "npm run test:frontend && npm run test:backend",
+    "test:frontend": "cd client && npm run test",
+    "test:backend": "cd server && npm run test",
+    "lint": "npm run lint:frontend && npm run lint:backend",
+    "lint:frontend": "cd client && npm run lint",
+    "lint:backend": "cd server && npm run lint",
+    "docker:dev": "docker-compose -f docker-compose.dev.yml up --build",
+    "docker:dev-minimal": "docker-compose -f docker-compose.dev.yml up frontend backend postgres",
+    "docker:down": "docker-compose -f docker-compose.dev.yml down",
+    "docker:logs": "docker-compose -f docker-compose.dev.yml logs -f",
+    "docker:clean": "docker-compose -f docker-compose.dev.yml down -v --remove-orphans"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "keywords": [
+    "environment",
+    "sustainability", 
+    "blockchain",
+    "web3",
+    "carbon-tracking",
+    "eco-tokens"
+  ],
+  "author": "EcoX Team",
+  "license": "MIT"
+}

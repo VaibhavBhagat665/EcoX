@@ -5,11 +5,11 @@ import { authenticateUser, authenticateAdmin } from "./middleware/auth";
 import { aiVerificationService } from "./services/ai-verification";
 import { blockchainService } from "./services/blockchain";
 import { insertUserSchema, insertGreenActionSchema, insertEcoTokenTransactionSchema } from "@shared/schema";
-
-interface AuthenticatedRequest extends Request {
-  user?: any;
-  isAdmin?: boolean;
-}
+import { verifyFirebaseToken, optionalAuth, configureCORS, AuthenticatedRequest } from "./middleware/firebaseAuth";
+import { verifyUserAction } from "./services/verifyAction";
+import { mintTokens, burnTokens, getTokenBalance } from "./lib/blockchain";
+import { getFirestore, MockFirestore, isMockMode } from "./lib/firebase";
+import { chatWithAssistant } from "./lib/aiClient";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   

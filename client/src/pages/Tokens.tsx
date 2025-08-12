@@ -26,9 +26,10 @@ import {
 
 export const Tokens: React.FC = () => {
   const { isAuthenticated } = useAuth();
+  const [location, setLocation] = useRouter();
 
   const handleBackToHome = () => {
-    window.location.href = '/';
+    setLocation('/');
   };
 
   const earnOpportunities = [

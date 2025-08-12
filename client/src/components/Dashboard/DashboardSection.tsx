@@ -27,6 +27,8 @@ export const DashboardSection: React.FC = () => {
   const [profile, setProfile] = useState<any>(null);
   const [tokenBalance, setTokenBalance] = useState('0');
   const [isLoadingProfile, setIsLoadingProfile] = useState(false);
+  const [recommendations, setRecommendations] = useState<any[]>([]);
+  const [aiLoading, setAiLoading] = useState(false);
 
   // Fetch user profile
   const { data: profileData, isLoading: profileLoading } = useQuery({

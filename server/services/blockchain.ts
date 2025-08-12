@@ -48,6 +48,18 @@ class BlockchainService {
     this.initializeProvider();
   }
 
+  private isValidPrivateKey(privateKey: string): boolean {
+    // Check if it's a placeholder value
+    if (privateKey.includes('your_') || privateKey.includes('SET_IN_REPLIT')) {
+      return false;
+    }
+
+    // Check if it's a valid hex string (64 characters, optionally prefixed with 0x)
+    const cleanKey = privateKey.startsWith('0x') ? privateKey.slice(2) : privateKey;
+    const hexRegex = /^[0-9a-fA-F]{64}$/;
+    return hexRegex.test(cleanKey);
+  }
+
   private async initializeProvider(): Promise<void> {
     try {
       // Validate environment variables

@@ -229,7 +229,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { userId } = req.params;
 
       // Users can only access their own transactions
-      if (userId !== req.user!.uid) {
+      if (userId !== req.user?.uid) {
         res.status(403).json({ error: 'Access denied' });
         return;
       }

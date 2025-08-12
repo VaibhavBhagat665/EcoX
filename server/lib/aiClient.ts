@@ -211,8 +211,43 @@ export async function verifyActionData(data: {
   estimatedImpact?: EstimationResult;
 }> {
   console.log(`🔄 Starting verification pipeline for ${data.type} action`);
-  
+
   try {
+    // Try Gemini AI first if available
+    if (isGeminiAvailable()) {
+      try {
+        console.log('🤖 Using Gemini AI for action analysis');
+        const geminiResult = await analyzeEnvironmentalAction({
+          type: data.type,
+          description: data.userSubmittedData?.description || 'Environmental action',
+          kWh: data.userSubmittedData?.kWh,
+          imageUrl: data.imageUrl,
+          userSubmittedData: data.userSubmittedData
+        });
+
+        return {
+          verified: geminiResult.verified,
+          confidence: geminiResult.confidence,
+          aiAnalysis: geminiResult.aiAnalysis,
+          extractedData: data.userSubmittedData,
+          estimatedImpact: geminiResult.co2Saved ? {
+            success: true,
+            co2Kg: geminiResult.co2Saved,
+            confidence: geminiResult.confidence,
+            methodology: 'Gemini AI Analysis',
+            breakdown: {
+              energyType: data.type,
+              consumptionkWh: data.userSubmittedData?.kWh || 0,
+              emissionFactor: 0.4
+            }
+          } : undefined
+        };
+      } catch (geminiError) {
+        console.warn('Gemini AI failed, falling back to traditional pipeline:', geminiError);
+      }
+    }
+
+    // Fall back to original verification pipeline
     let verified = false;
     let confidence = 0;
     let aiAnalysis = '';
